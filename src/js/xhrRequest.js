@@ -5,21 +5,26 @@ export default class XhrRequest {
   }
 
   sendDataItem(body) {
-    const xhr = new XMLHttpRequest();
 
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState !== 4) return;
-    };
-
-    xhr.open('POST', 'http://localhost:7060');
-
-    xhr.send(body);
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'http://localhost:7060');
+  
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState === 4) {
+            resolve(JSON.parse(xhr.response));
+          }
+        };
+  
+        xhr.send(body);
+      });
   }
 
-  async getDataForItems() {
+  async getDataForItems(method) {
+      
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('GET', 'http://localhost:7060');
+      xhr.open('GET', 'http://localhost:7060/?' + method);
 
       xhr.onreadystatechange = () => {
         if (xhr.readyState === 4) {
@@ -31,17 +36,22 @@ export default class XhrRequest {
     });
   }
 
-  patchDataForItem(itemInfo) {
-    const xhr = new XMLHttpRequest();
+  patchDataForItem(id, body) {
 
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState !== 4) return;
-    };
-
-    xhr.open('PATCH', `http://localhost:7060/?${itemInfo}`);
-
-    xhr.send();
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PATCH', `http://localhost:7060/?${id}`);
+  
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState === 4) {
+            resolve(JSON.parse(xhr.response));
+          }
+        };
+  
+        xhr.send(body);
+      });
   }
+
 
   deleteItem(itemName) {
     const xhr = new XMLHttpRequest();

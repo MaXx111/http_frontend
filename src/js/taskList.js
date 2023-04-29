@@ -1,5 +1,6 @@
 import ToolTip from './toolTip.js';
 import XhrRequest from './xhrRequest.js';
+import HTMLElems from './htmlElems.js';
 
 export default class TaskList {
   constructor(element) {
@@ -9,19 +10,26 @@ export default class TaskList {
 
     this._element = element;
     this.form = false;
+    this.editITaskid = false;
+
     this.activeTask = false;
 
+
     this.XhrRequest = new XhrRequest();
+    this.toolTip = new ToolTip();
+    this.htnlElems = new HTMLElems();
 
     this.addForm = this.addForm.bind(this);
+    this.addAgreeFrom = this.addAgreeFrom.bind(this);
     this.removeForm = this.removeForm.bind(this);
+
+    this.onAddSubmit = this.onAddSubmit.bind(this);
+    this.onEditSubmit = this.onEditSubmit.bind(this);
+
     this.onTaskItem = this.onTaskItem.bind(this);
     this.printTaskItem = this.printTaskItem.bind(this);
-    this.addAgreeFrom = this.addAgreeFrom.bind(this);
-
-    this.editItem = this.editItem.bind(this);
-    this.onSubmit = this.onSubmit.bind(this);
-    this.toolTip = new ToolTip();
+    this.editTask = this.editTask.bind(this);
+    
     this.errorsMsg = this.toolTip.errors();
     this.getErrorMsg = this.getErrorMsg.bind(this);
     this.onBlur = this.onBlur.bind(this);
@@ -32,35 +40,22 @@ export default class TaskList {
     this._element.querySelector('.header__btn').addEventListener('click', this.addForm);
     this._element.querySelector('.task-list__items-list').addEventListener('click', this.onTaskItem);
 
-    this.XhrRequest.getDataForItems().then((body) => {
+    this.XhrRequest.getDataForItems(`method=allTasks`).then((body) => {
       if (body.length == 0) return;
+      console.log(body)
 
       for (let i = 0; i < body.length; i++) {
-        this.printTaskItem(body[i].name, body[i].date);
+        this.printTaskItem(body[i].name, body[i].created, body[i].status, body[i].id);
       }
     });
   }
 
   addForm() {
-    const form = document.createElement('form');
-    form.className = 'task-widget__form';
-    form.noValidate = 'novalidate';
-    form.innerHTML = `<div class="form__item">
-                        <h2 class="form__item__title">Описание</h2>
-                        <input name="name" id="name" class="input name" type="text" placeholder="Описание" required>
-                      </div>
-                      <div class="form__item">
-                        <h2 class="form__item__title">Подробное описане</h2>
-                        <textarea class="form__textarea" name="textarea" placeholder="Подробное описание" required></textarea>
-                      </div>
-                      <div class="form__buttons">
-                        <button type="submit" class="form-btn save-btn">Добавить</button>
-                        <button type="reset" class="form-btn cancel-btn">Отмена</button>
-                      </div>`;
+    const form = this.htnlElems.addFormHTML();
 
     document.querySelector('.conteiner').appendChild(form);
 
-    form.addEventListener('submit', this.onSubmit);
+    form.addEventListener('submit', this.onAddSubmit);
     form.querySelector('.cancel-btn').addEventListener('click', this.removeForm);
 
     const inputs = form.querySelectorAll('.input');
@@ -83,7 +78,7 @@ export default class TaskList {
       }
     }
 
-    this.form.removeEventListener('submit', this.onSubmit);
+    this.form.removeEventListener('submit', this.onAddSubmit);
     this.form.querySelector('.cancel-btn').removeEventListener('click', this.removeForm);
 
     const inputs = this.form.querySelectorAll('.input');
@@ -97,7 +92,7 @@ export default class TaskList {
     this.form = false;
   }
 
-  onSubmit(e) {
+  onAddSubmit(e) {
     e.preventDefault();
 
     const { elements } = this.form;
@@ -105,33 +100,135 @@ export default class TaskList {
 
     if (isValidate) return;
 
-    // сбор данных
-    const name = this.form.elements[0].value;
-    const textarea = this.form.elements[1].value;
-    const setDate = new Date();
-    let date = [setDate.getFullYear(), setDate.getMonth(), setDate.getDay()].join('.');
-    const time = setDate.getHours();
-    date = `${date} ${time}`;
-
-    this.printTaskItem(name, date);
-
-    // отправка данных на сервер
-    this.XhrRequest.sendDataItem(new FormData(this.form));
-
-    this.form.reset();
-    this.removeForm();
+    this.XhrRequest.sendDataItem(new FormData(this.form)).then((body) => {
+      this.printTaskItem(body.name, body.created, body.status, body.id);
+      this.form.reset();
+      this.removeForm();
+    });
   }
 
-  getErrorMsg(el) {
-    const errorKey = Object.keys(ValidityState.prototype).find((key) => {
-      if (!el.name) return;
-      if (key === 'valid') return;
-      return el.validity[key];
+  onEditSubmit(e) {
+      e.preventDefault();
+
+      const { elements } = this.form;
+      const isValidate = [...elements].some((el) => this.removeOrShowToolTip(el));
+
+      if (isValidate) return;
+
+      this.XhrRequest.patchDataForItem(`id=${this.editITaskid}`, new FormData(this.form)).then((body) => {
+        this.editTask(body);
+      });
+
+      this.form.reset();
+      this.removeForm();
+    
+  }
+
+  onTaskItem(e) {
+    if (!e.target.closest('.task__item')) return;
+
+    const itemId = e.target.closest('.task__wrapper').id;
+
+    if (e.target.className === 'item__edit-btn__icon') {
+      this.addEditForm(itemId);
+
+      return;
+    }
+
+    if (e.target.className === 'item__remove-btn__icon') {
+      this.addAgreeFrom(itemElem);
+
+      return;
+    }
+
+    // this.XhrRequest.getDataForItems().then((body) => {
+    //   if (body.length == 0) return;
+
+    //   for (let i = 0; i < body.length; i++) {
+    //     if (body[i].name == itemName) {
+    //       const textarea = document.createElement('span');
+    //       textarea.className = 'textarea';
+    //       textarea.textContent = body[i].textarea;
+    //       itemElem.querySelector('.item__name').insertAdjacentElement('afterend', textarea);
+    //     }
+    //   }
+    // });
+  }
+
+  editTask(data) {
+    if(!this.editITaskid) return;
+    
+    const task = document.getElementById(data.id);
+    task.querySelector('.item__name').textContent = data.name;
+  }
+
+  addEditForm(id) {
+    this.editITaskid = id;
+
+    const form = this.htnlElems.editFormHTML();
+    document.querySelector('.conteiner').appendChild(form);
+
+    form.addEventListener('submit', this.onEditSubmit);
+    form.querySelector('.cancel-btn').addEventListener('click', this.removeForm);
+
+    const inputs = form.querySelectorAll('.input');
+    inputs.forEach((el) => {
+      el.addEventListener('focus', () => {
+        el.addEventListener('blur', this.onBlur);
+      });
     });
 
-    if (!errorKey) return;
-    return this.errorsMsg[el.name][errorKey];
+    this.XhrRequest.getDataForItems(`method=fullTask&id=${id}`).then((body) => {
+      if (!body) return;
+      console.log(body)
+      this.form.elements[0].value = body.name;
+      this.form.elements[1].value = body.description;
+    });
+
+    this.form = form;
   }
+
+  addAgreeFrom(itemElem) {
+    const form = this.htnlElems.agreeFormHTML();
+
+    this.form = form;
+    document.querySelector('.conteiner').appendChild(form);
+
+    form.querySelector('.delete').addEventListener('click', () => {
+      this.removeItem(itemElem);
+    });
+
+    form.querySelector('.cancel').addEventListener('click', () => {
+      this.form.remove();
+      this.form = false;
+    });
+  }
+
+  removeItem(itemElem) {
+    let nameItem = itemElem.querySelector('.item__name').textContent;
+    nameItem = `name=${encodeURIComponent(nameItem)}`;
+
+    this.XhrRequest.deleteItem(nameItem);
+
+    itemElem.remove();
+    this.form.remove();
+    this.form = false;
+  }
+
+  printTaskItem(name, date, status, id) {
+    const item = this.htnlElems.taskHTML(name, date, status, id);
+
+    document.querySelector('.task-list__items-list').appendChild(item);
+  }
+
+
+
+
+
+
+
+
+
 
   onBlur(e) {
     const el = e.target;
@@ -163,180 +260,14 @@ export default class TaskList {
     }
   }
 
-  onTaskItem(e) {
-    if (!e.target.closest('.task__item')) return;
-
-    const itemElem = e.target.closest('.task__item');
-    const itemName = itemElem.querySelector('.item__name').textContent;
-
-    if (e.target.className === 'item__edit-btn__icon') {
-      this.editItem(itemElem);
-
-      return;
-    }
-
-    if (e.target.className === 'item__remove-btn__icon') {
-      this.addAgreeFrom(itemElem);
-
-      return;
-    }
-
-    if (this.activeTask) this.activeTask.checked = false;
-    e.target.closest('.task__item').querySelector('.check').checked = true;
-    this.activeTask = e.target.closest('.task__item').querySelector('.check');
-
-    this.XhrRequest.getDataForItems().then((body) => {
-      if (body.length == 0) return;
-
-      for (let i = 0; i < body.length; i++) {
-        if (body[i].name == itemName) {
-          const textarea = document.createElement('span');
-          textarea.className = 'textarea';
-          textarea.textContent = body[i].textarea;
-          itemElem.querySelector('.item__name').insertAdjacentElement('afterend', textarea);
-        }
-      }
-    });
-  }
-
-  editItem(itemElem) {
-    this.XhrRequest.getDataForItems().then((body) => {
-      if (body.length == 0) return;
-
-      this.addEditForm(itemElem);
-
-      const itemName = itemElem.querySelector('.item__name').textContent;
-      let index;
-
-      for (let i = 0; i < body.length; i++) {
-        if (body[i].name == itemName) {
-          index = i;
-        }
-      }
-      this.form.elements[0].value = body[index].name;
-      this.form.elements[1].value = body[index].textarea;
-    });
-  }
-
-  addEditForm(itemElem) {
-    const itemName = itemElem.querySelector('.item__name').textContent;
-    const form = document.createElement('form');
-    form.className = 'task-widget__form';
-    form.noValidate = 'novalidate';
-    form.innerHTML = `<div class="form__item">
-                        <h2 class="form__item__title">Описание</h2>
-                        <input name="name" id="name" class="input name" type="text" disabled placeholder="Описание">
-                      </div>
-                      <div class="form__item">
-                        <h2 class="form__item__title">Подробное описане</h2>
-                        <textarea class="form__textarea" name="textarea" placeholder="Подробное описание" required></textarea>
-                      </div>
-                      <div class="form__buttons">
-                        <button type="submit" class="form-btn save-btn">Добавить</button>
-                        <button type="reset" class="form-btn cancel-btn">Отмена</button>
-                      </div>`;
-
-    document.querySelector('.conteiner').appendChild(form);
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const { elements } = this.form;
-      const isValidate = [...elements].some((el) => this.removeOrShowToolTip(el));
-
-      if (isValidate) return;
-
-      // сбор данных
-      const name = this.form.elements[0].value;
-      const textarea = this.form.elements[1].value;
-      const setDate = new Date();
-      let date = [setDate.getFullYear(), setDate.getMonth(), setDate.getDay()].join('.');
-      const time = setDate.getHours();
-      date = `${date} ${time}`;
-
-      // отправка данных на сервер
-      let nameItem = itemElem.querySelector('.item__name').textContent;
-      nameItem = `name=${encodeURIComponent(nameItem)}`;
-      this.XhrRequest.patchDataForItem(`name=${name}&textarea=${textarea}`);
-
-      this.form.reset();
-      this.removeForm();
+  getErrorMsg(el) {
+    const errorKey = Object.keys(ValidityState.prototype).find((key) => {
+      if (!el.name) return;
+      if (key === 'valid') return;
+      return el.validity[key];
     });
 
-    form.querySelector('.cancel-btn').addEventListener('click', this.removeForm);
-
-    const inputs = form.querySelectorAll('.input');
-    inputs.forEach((el) => {
-      el.addEventListener('focus', () => {
-        el.addEventListener('blur', this.onBlur);
-      });
-    });
-
-    this.form = form;
-  }
-
-  addAgreeFrom(itemElem) {
-    const form = document.createElement('form');
-    form.className = 'task-widget__form';
-    form.innerHTML = `<h2 class="form__item__title">Вы уверены?</h2>
-                        <button type="submit" class="form-btn delete">Да</button>
-                        <button type="reset" class="form-btn cancel">Нет</button>
-                      </div>`;
-
-    this.form = form;
-    document.querySelector('.conteiner').appendChild(form);
-
-    form.querySelector('.delete').addEventListener('click', () => {
-      this.removeItem(itemElem);
-    });
-
-    form.querySelector('.cancel').addEventListener('click', () => {
-      this.form.remove();
-      this.form = false;
-    });
-  }
-
-  removeItem(itemElem) {
-    let nameItem = itemElem.querySelector('.item__name').textContent;
-    nameItem = `name=${encodeURIComponent(nameItem)}`;
-
-    this.XhrRequest.deleteItem(nameItem);
-
-    itemElem.remove();
-    this.form.remove();
-    this.form = false;
-  }
-
-  printTaskItem(name, date) {
-    const item = document.createElement('li');
-    item.className = 'task__item';
-
-    const checkRadio = document.createElement('input');
-    checkRadio.type = 'radio';
-    checkRadio.className = 'check';
-
-    const nameItem = document.createElement('span');
-    nameItem.className = 'item__name item__text';
-    nameItem.textContent = name;
-
-    const dateItem = document.createElement('span');
-    dateItem.className = 'item__date item__text';
-    dateItem.textContent = date;
-
-    const itemButtons = document.createElement('li');
-    itemButtons.className = 'item__buttons';
-    itemButtons.innerHTML = `<a href="#"  class="item__remove-btn__link">
-                              <img src="./image/xmark-solid.svg" alt="icon-xmark" class="item__remove-btn__icon">
-                            </a>
-                            <a href="#" class="item__edit-btn__link">
-                              <img src="./image/pencil.png" alt="icon-edit" class="item__edit-btn__icon">
-                            </a>`;
-
-    item.appendChild(checkRadio);
-    item.appendChild(nameItem);
-    item.appendChild(dateItem);
-    item.appendChild(itemButtons);
-
-    document.querySelector('.task-list__items-list').appendChild(item);
+    if (!errorKey) return;
+    return this.errorsMsg[el.name][errorKey];
   }
 }

@@ -77,7 +77,10 @@ body {
 }
 
 
-
+.task__wrapper {
+    padding: 12px;
+    border-bottom: 1px solid black;
+}
 
 .task__item {
     display: flex;
@@ -92,6 +95,11 @@ body {
 
 .item__date {
     text-align: end;
+}
+
+.task__radio {
+    position: absolute;
+    left: 13px;
 }
 
 

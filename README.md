@@ -1,0 +1,1 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/u7ntda1t3p6nhmr9?svg=true)](https://ci.appveyor.com/project/MaXx111/http-frontend)

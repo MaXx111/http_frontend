@@ -1,6 +1,6 @@
 export default class ToolTip {
   constructor() {
-    this._tooltip;
+    this._tooltip = {};
   }
 
   showTooltip(msg, elem) {

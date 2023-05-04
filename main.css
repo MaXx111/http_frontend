@@ -1,0 +1,210 @@
+* {
+    margin: 0;
+}
+
+body {
+    background-color: beige;
+}
+
+.conteiner {
+    padding: 150px 50px 0 50px;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-evenly;
+}
+
+
+
+
+.task-widget {
+    width: 600px;
+    position: relative;
+}
+
+.task-widget__header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 0 15px 0;
+}
+
+.header__btn {
+    display: block;
+    text-decoration: none;
+    padding: 12px;
+    border: 1px solid black;
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+.header__btn:hover {
+    background-color: rgb(253, 205, 151);
+}
+
+.header__btn:active {
+    background-color: #fff;
+}  
+
+.header__btn-text {
+    display: block;
+    color: black;
+}
+
+
+
+.task-widget__wrapper {
+    background-color: #fff;
+    border: 1px solid black;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+.task-widget__titles {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between; 
+}
+
+
+.task-widget__title {
+    padding: 0;
+}
+
+.task-list__items-list {
+    margin: 0;
+    padding: 0 12px;
+    list-style-type: none;
+}
+
+
+.task__wrapper {
+    padding: 12px;
+    border-bottom: 1px solid black;
+}
+
+.task__item {
+    display: flex;
+    align-items: center;
+}
+
+.item__text {
+    display: block;
+    width: 236px;
+    padding: 5px 0 5px 0;
+}
+
+.item__date {
+    text-align: end;
+}
+
+.task__radio {
+    position: absolute;
+    left: 13px;
+}
+
+
+.item__buttons {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-evenly;
+    flex: auto;
+    align-items: center;
+}
+
+.item__remove-btn__icon {
+    width: 15px;
+}
+
+
+.item__edit-btn__icon {
+    width: 15px;
+}
+
+
+
+
+
+
+
+.task-widget__form {
+    position: absolute;
+    width: 300px;
+    top: 236px;
+    background-color: beige;
+    border: 2px solid rgb(228, 192, 115);
+    border-radius: 5px;
+    padding: 0 17px 17px 17px;
+}
+
+.form__item {
+    display: flex;
+    flex-direction: column;
+}
+
+.form__item__title {
+    padding: 8px 0 5px 0;
+    font-size: 22px;
+}
+
+.input {
+    padding: 5px;
+    border-radius: 33px;
+    border: 1px solid rgb(133, 102, 46);
+}
+
+.input:focus {
+    outline: none;
+    border: 1px solid rgb(255, 197, 88);
+}
+
+.form__textarea {
+    resize: none;
+    padding: 5px;
+    border: 1px solid rgb(133, 102, 46);
+    border-radius: 33px;
+}
+
+.name {
+}
+
+.price {
+}
+
+.form__buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding-top: 10px;
+}
+
+.form-btn {
+    padding: 10px;
+    margin-right: 10px;
+    border-radius: 30px;
+    background-color: #fff;
+    border: 1px solid rgb(133, 102, 46);
+}
+
+.form-btn:hover {
+    background-color: rgb(230, 217, 148);
+    border: 1px solid rgb(255, 197, 88);
+}
+
+.form-btn:active {
+    background-color: #fff;
+    border: 1px solid rgb(133, 102, 46);
+}
+
+.form-btn:last-child {
+    margin-right: 0;
+}
+
+.tooltip {
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid rgb(133, 102, 46);
+    padding: 5px;
+    border-radius: 33px;
+}
+
+/*# sourceMappingURL=main.css.map*/

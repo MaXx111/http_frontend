@@ -20,7 +20,7 @@ export default class TaskList {
 
     // удаление и добавление форм
     this.addForm = this.addForm.bind(this);
-    this.addAgreeFrom = this.addAgreeFrom.bind(this);
+    this.addAgreeForm = this.addAgreeForm.bind(this);
     this.addEditForm = this.addEditForm.bind(this);
     this.removeForm = this.removeForm.bind(this);
 
@@ -135,7 +135,7 @@ export default class TaskList {
     this.removeForm();
   }
 
-  addAgreeFrom(itemId) {
+  addAgreeForm(itemId) {
     const form = this.htmlElems.agreeFormHTML();
 
     this.form = form;
@@ -188,7 +188,7 @@ export default class TaskList {
     }
 
     if (e.target.className === 'item__remove-btn__icon') {
-      this.addAgreeFrom(itemId);
+      this.addAgreeForm(itemId);
       this.removeDescription();
 
       return;
